@@ -3,9 +3,9 @@ var express = require('express'),
 	body = 	require('body-parser'),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
-	users = [];
+	users = []; // Bdd
 	
-server.listen(3001,"0.0.0.0");
+server.listen(3001,"0.0.0.0"); // Lancement du serveur
 
 // parse application/x-www-form-urlencoded 
 app.use(body.urlencoded({ extended: false }))
@@ -24,8 +24,8 @@ app.get('/', function(req, res){
 });
 
 /* Register - POST */
-app.post('/login', function(req, res){
-	users.push(req.body);
+app.post('/register', function(req, res){
+	users.push(req.body); // Insert Into
 	res.send(users);
 });
 
@@ -34,12 +34,12 @@ app.post('/login', function(req, res){
 
 // route pour connection
 /* Login - POST */
-app.put('/login', function(req, res){
+app.post('/login', function(req, res){
 	// definir une function a vide pour stocker les infos de notre utilisateur
 	var theUser = {};
 	// on definit la variable qui contient le message d'erreur
 	var error = {"error":true,"message":"Fail"};
-	users.forEach(function(user){
+	users.forEach(function(user){ // fetchAll - Foreach
 		// si le phone poster par l'utilisateur (y en a un)
 		if (req.body.phone){
 			// un des phone de notre Jason est egal au phone poster par l'utilisateur
@@ -61,5 +61,25 @@ app.put('/login', function(req, res){
 		else
 			res.send(error);
 	}else
-		res.send(error);
+		res.send(error);			
+});
+	
+
+app.put('/login', function(req, res){
+	var theUser = {};
+	usersBis = []; // Bdd
+	var newPassword;
+	users.forEach(function(user){
+		if (req.body.phone){
+			// un des phone de notre Jason est egal au phone poster par l'utilisateur
+			if(req.body.phone == user.phone){
+				newPassword = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+				user.password = newPassword;
+			}
+			usersBis.push(user); // Insert Into	
+		}
+	});
+	users = usersBis;
+	res.send(newPassword);
+	
 });
