@@ -1,9 +1,11 @@
 var express = require('express'),
 	app = express(),
 	body = 	require('body-parser'),
+	fs = 	require('fs'),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
 	users = []; // Bdd
+
 	
 server.listen(3001,"0.0.0.0"); // Lancement du serveur
 
@@ -23,6 +25,7 @@ app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
 });
 
+// enregistrer un utilisateur
 /* Register - POST */
 app.post('/register', function(req, res){
 	users.push(req.body); // Insert Into
@@ -64,7 +67,7 @@ app.post('/login', function(req, res){
 		res.send(error);			
 });
 	
-
+// pour changer le password
 app.put('/login', function(req, res){
 	var theUser = {};
 	usersBis = []; // Bdd
@@ -81,5 +84,63 @@ app.put('/login', function(req, res){
 	});
 	users = usersBis;
 	res.send(newPassword);
+	
+});
+
+// modification des infos users, subtilités selon les données envoyés par l'utilisateur
+
+//route en put car update d'information
+app.put('/editInfomation', function(req, res){
+    var theUser = {};
+    usersBis = [];
+    users.forEach(function(user){
+         if (req.body.phone){
+
+
+            if(req.body.phone == user.phone){
+            	
+                for (var param in req.body) {
+                	
+                    user.password = (req.body.password)? req.body.password : user.password;
+                    user.name = (req.body.name)? req.body.name : user.name;
+                    user.mail = (req.body.mail)? req.body.mail : user.mail;
+                    theUser = user;
+                }
+            }
+            usersBis.push(user);
+        }
+    });
+    users = usersBis;
+    
+    res.send(theUser);
+})
+
+ 
+//c'est le code pour la modification des infos des utilisateurs
+
+app.post('/fichier', function(req, res){
+	var name = req.body.name;
+	var error = {"error":true,"message":"Fail"};
+	fs.writeFile('message.txt', name, (err) => {
+		if (err) res.send(error);
+		res.send({"error":false,"message":"It\'s saved!"});
+	});
+		// fs.watch('./tmp', {encoding: 'base64'}, (eventType, filename) => {
+  			// if (filename)
+    		// console.log(filename);
+   		// 
+		// });
+		// fs.createReadStream('sample.txt', {start: 90, end: 99});
+		// 
+		// const path = require('path');
+		// fs.mkdtemp(tmpDir + path.sep, (err, folder) => {
+		//  if (err) throw err;
+		//  console.log(folder);
+		  // Will print something similar to `/tmp/abc123`.
+		  // A new temporary directory is created within
+		  // the /tmp directory.
+		//	});
+		//	fs.openSync(path, flags[, mode])
+		//	fs.readFile(file[, options], callback)
 	
 });
