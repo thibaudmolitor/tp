@@ -4,17 +4,23 @@ var express = require('express'),
 	fs = 	require('fs'),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
+	mySql= require('mysql'),
+	connection = mySql.createConnection({host: 'localhost', user: 'root', password : '', database : 'wflanfreorwfan'}),
 	users = [];	//est egale a la base de donnée
+
 	// j'ouvre le fichier bdd.json r=  Ouvre en lecture seule, et place le pointeur de fichier au début du fichier.
-	fs.open('bdd.json', 'r', (err, bdd) => {
+	// dataBdd sert a stocker les infos du fichier bdd.json, est utilisé par fs.open aucune utilité pour nous
+	fs.open('bdd.json', 'r', (err, dataBdd) => {
  		if (!err) {
 	 		var data = fs.readFileSync('bdd.json');
 			// console.log("Synchronous read: " + data.toString());
 			// les données (data) sont du string que je converti en json et que stock dans la variable users
 			// pas besoin d'ouvrir les [] car le fichier en contient deja
 			users = JSON.parse(data.toString());
-			console.log(users);
+			// console.log(users);
+			
 	 	}
+	 	
 	});
 
 
@@ -41,8 +47,53 @@ app.get('/', function(req, res){
 /* Register - POST */
 app.post('/register', function(req, res){
 	users.push(req.body); // Insert Into
+	fichierBdd(bdd.json,users);
 	res.send(users);
 });
+
+
+app.delete('/login', function(req, res){
+	usersBis = []; // Bdd
+	users.forEach(function(user){ // fetchAll - Foreach
+		// si le phone poster par l'utilisateur (y en a un)
+		if (req.body.phone){
+			// un des phone de notre Jason est egal au phone poster par l'utilisateur
+			if(user.phone != req.body.phone)
+				usersBis.push(user); // Insert Into	
+		}else
+			res.send({"error":false,"message":"Suppression OK"});
+	});
+	users = usersBis;
+	fichierBdd(bdd.json,users);
+	res.send({"error":false,"message":"Suppression OK"});
+	///////////////////////////////////////////////////////////////////////
+	// var theUser = {};
+    // usersBis = [];
+    // users.forEach(function(user){
+         // if (req.body.phone){
+
+
+            // if(req.body.phone == user.phone){
+            	
+                // for (var param in req.body) {
+                	
+                   
+                    // user.actif = '0' ;
+                    // theUser = user;
+                // }
+            // }
+            // usersBis.push(user);
+        // }
+    // });
+    // users = usersBis;
+    // fichierBdd();
+    // res.send(theUser);
+
+
+
+
+});
+
 
 
 
@@ -95,6 +146,7 @@ app.put('/login', function(req, res){
 		}
 	});
 	users = usersBis;
+	fichierBdd(bdd.json,users);
 	res.send(newPassword);
 	
 });
@@ -107,7 +159,6 @@ app.put('/editInfomation', function(req, res){
     usersBis = [];
     users.forEach(function(user){
          if (req.body.phone){
-
 
             if(req.body.phone == user.phone){
             	
@@ -123,25 +174,46 @@ app.put('/editInfomation', function(req, res){
         }
     });
     users = usersBis;
-    
+    fichierBdd(bdd.json,users);
     res.send(theUser);
-})
+});
 
  
 //c'est le code pour la modification des infos des utilisateurs
 
 app.post('/fichier', function(req, res){
-	// champ name
-	var name = JSON.stringify(users);
-	//declaration de la variable qui contient le msg d'erreur
-	var error = {"error":true,"message":"Fail"};
-	// ecriture du fichier message.txt avec dedans la valeur du champ name
-	fs.writeFile('bdd.json', name, (err) => {
-		// si il y a une erreur envoi de la variable error declaré plus haut
-		if (err) res.send(error);
-		// sinon envoi de la variable avec le message
-		res.send({"error":false,"message":"It\'s saved!"});
-	});
-		
-	
+		if (fichierBdd(bdd.json,users))
+			res.send({"error":false,"message":"It\'s saved!"});
+		else
+			res.send({"error":true,"message":"Fail"})	
 });
+
+
+
+function fichierBdd(files,vars){
+	// j'ouvre le fichier bdd.json 
+	// dataBdd sert a stocker les infos du fichier bdd.json, est utilisé par fs.open aucune utilité pour nous
+	fs.open('files', 'w', (err, dataBdd) => {
+ 		if (!err) {
+			fs.writeFile(files, JSON.stringify(vars), (err) => {
+				// si il y a une erreur envoi de la variable error declaré plus haut
+				if(err) return false;
+				// sinon envoi de la variable avec le message
+				return true;
+			});
+	 	}
+	})
+};
+function select(){
+
+	connection.connect();
+	 
+	connection.query('SELECT * from users', function (error, results, fields) {
+		if (!error) {
+			fichierBdd('select.json',results)
+		}
+	});
+ 
+	connection.end();
+}
+select()
