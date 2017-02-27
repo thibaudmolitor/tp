@@ -4,7 +4,19 @@ var express = require('express'),
 	fs = 	require('fs'),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
-	users = []; // Bdd
+	users = [];	//est egale a la base de donnée
+	// j'ouvre le fichier bdd.json r=  Ouvre en lecture seule, et place le pointeur de fichier au début du fichier.
+	fs.open('bdd.json', 'r', (err, bdd) => {
+ 		if (!err) {
+	 		var data = fs.readFileSync('bdd.json');
+			// console.log("Synchronous read: " + data.toString());
+			// les données (data) sont du string que je converti en json et que stock dans la variable users
+			// pas besoin d'ouvrir les [] car le fichier en contient deja
+			users = JSON.parse(data.toString());
+			console.log(users);
+	 	}
+	});
+
 
 	
 server.listen(3001,"0.0.0.0"); // Lancement du serveur
@@ -119,28 +131,17 @@ app.put('/editInfomation', function(req, res){
 //c'est le code pour la modification des infos des utilisateurs
 
 app.post('/fichier', function(req, res){
-	var name = req.body.name;
+	// champ name
+	var name = JSON.stringify(users);
+	//declaration de la variable qui contient le msg d'erreur
 	var error = {"error":true,"message":"Fail"};
-	fs.writeFile('message.txt', name, (err) => {
+	// ecriture du fichier message.txt avec dedans la valeur du champ name
+	fs.writeFile('bdd.json', name, (err) => {
+		// si il y a une erreur envoi de la variable error declaré plus haut
 		if (err) res.send(error);
+		// sinon envoi de la variable avec le message
 		res.send({"error":false,"message":"It\'s saved!"});
 	});
-		// fs.watch('./tmp', {encoding: 'base64'}, (eventType, filename) => {
-  			// if (filename)
-    		// console.log(filename);
-   		// 
-		// });
-		// fs.createReadStream('sample.txt', {start: 90, end: 99});
-		// 
-		// const path = require('path');
-		// fs.mkdtemp(tmpDir + path.sep, (err, folder) => {
-		//  if (err) throw err;
-		//  console.log(folder);
-		  // Will print something similar to `/tmp/abc123`.
-		  // A new temporary directory is created within
-		  // the /tmp directory.
-		//	});
-		//	fs.openSync(path, flags[, mode])
-		//	fs.readFile(file[, options], callback)
+		
 	
 });
