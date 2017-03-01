@@ -193,7 +193,7 @@ app.post('/fichier', function(req, res){
 function fichierBdd(files,vars){
 	// j'ouvre le fichier bdd.json 
 	// dataBdd sert a stocker les infos du fichier bdd.json, est utilisé par fs.open aucune utilité pour nous
-	fs.open('files', 'w', (err, dataBdd) => {
+	fs.open(files, 'w', (err, dataBdd) => {
  		if (!err) {
 			fs.writeFile(files, JSON.stringify(vars), (err) => {
 				// si il y a une erreur envoi de la variable error declaré plus haut
@@ -216,4 +216,4 @@ function select(){
  
 	connection.end();
 }
-select()
+select();
